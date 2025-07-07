@@ -11,7 +11,7 @@ interface GitLogOptions {
 }
 
 async function runGitCommand(
-  args: string[]
+  args: string[],
 ): Promise<{ success: boolean; output: string }> {
   try {
     const cmd = new Deno.Command("git", {
@@ -53,7 +53,7 @@ export async function getUpstreamBranch(): Promise<string | null> {
 }
 
 export async function findParentBranch(
-  currentBranch: string
+  currentBranch: string,
 ): Promise<string | null> {
   // Method 1: Check if there's an upstream tracking branch
   const upstream = await getUpstreamBranch();
@@ -150,7 +150,7 @@ export async function findParentBranch(
 
 export async function getCommitCount(
   parentBranch: string,
-  currentBranch: string
+  currentBranch: string,
 ): Promise<number> {
   const result = await runGitCommand([
     "rev-list",
@@ -162,7 +162,7 @@ export async function getCommitCount(
 
 export async function getFilesChanged(
   parentBranch: string,
-  currentBranch: string
+  currentBranch: string,
 ): Promise<number> {
   const result = await runGitCommand([
     "diff",
@@ -176,7 +176,7 @@ export async function getFilesChanged(
 
 export async function getDiffStats(
   parentBranch: string,
-  currentBranch: string
+  currentBranch: string,
 ): Promise<string> {
   const result = await runGitCommand([
     "diff",
@@ -189,7 +189,7 @@ export async function getDiffStats(
 export async function showCommits(
   parentBranch: string,
   currentBranch: string,
-  options: GitLogOptions
+  options: GitLogOptions,
 ) {
   const args = ["--no-pager", "log"];
 
@@ -248,7 +248,7 @@ EXAMPLES:
     deno run --allow-run --allow-read git-branch-commits.ts
     deno run --allow-run --allow-read git-branch-commits.ts -p main
     deno run --allow-run --allow-read git-branch-commits.ts -o -g
-    deno run --allow-run --allow-read git-branch-commits.ts -s -n 10`
+    deno run --allow-run --allow-read git-branch-commits.ts -s -n 10`,
   );
 }
 
