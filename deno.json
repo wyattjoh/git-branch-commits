@@ -1,9 +1,9 @@
 {
   "name": "@wyattjoh/git-branch-commits",
   "tasks": {
-    "dev": "deno run --watch mod.ts"
+    "dev": "deno run --watch main.ts"
   },
-  "version": "0.1.1",
+  "version": "0.1.2",
   "license": "MIT",
-  "exports": "./mod.ts"
+  "exports": "./main.ts"
 }
