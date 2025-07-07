@@ -19,7 +19,7 @@ or merging.
 
 ```bash
 # Install globally
-deno install --allow-run --allow-read -n git-branch-commits https://raw.githubusercontent.com/wyattjoh/git-branch-commits/main/main.ts
+deno install -g --allow-run --allow-read -n git-branch-commits jsr:@wyattjoh/git-branch-commits
 
 # Or run directly
 deno run --allow-run --allow-read https://raw.githubusercontent.com/wyattjoh/git-branch-commits/main/main.ts
