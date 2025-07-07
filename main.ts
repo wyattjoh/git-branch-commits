@@ -10,33 +10,8 @@ interface GitLogOptions {
   number?: number;
 }
 
-// ANSI color codes
-const colors = {
-  red: "\x1b[0;31m",
-  green: "\x1b[0;32m",
-  yellow: "\x1b[1;33m",
-  blue: "\x1b[0;34m",
-  reset: "\x1b[0m",
-};
-
-function printInfo(message: string) {
-  console.log(`${colors.blue}${message}${colors.reset}`);
-}
-
-function printSuccess(message: string) {
-  console.log(`${colors.green}${message}${colors.reset}`);
-}
-
-function printWarning(message: string) {
-  console.log(`${colors.yellow}${message}${colors.reset}`);
-}
-
-function printError(message: string) {
-  console.error(`${colors.red}${message}${colors.reset}`);
-}
-
 async function runGitCommand(
-  args: string[],
+  args: string[]
 ): Promise<{ success: boolean; output: string }> {
   try {
     const cmd = new Deno.Command("git", {
@@ -78,7 +53,7 @@ export async function getUpstreamBranch(): Promise<string | null> {
 }
 
 export async function findParentBranch(
-  currentBranch: string,
+  currentBranch: string
 ): Promise<string | null> {
   // Method 1: Check if there's an upstream tracking branch
   const upstream = await getUpstreamBranch();
@@ -175,7 +150,7 @@ export async function findParentBranch(
 
 export async function getCommitCount(
   parentBranch: string,
-  currentBranch: string,
+  currentBranch: string
 ): Promise<number> {
   const result = await runGitCommand([
     "rev-list",
@@ -187,7 +162,7 @@ export async function getCommitCount(
 
 export async function getFilesChanged(
   parentBranch: string,
-  currentBranch: string,
+  currentBranch: string
 ): Promise<number> {
   const result = await runGitCommand([
     "diff",
@@ -201,7 +176,7 @@ export async function getFilesChanged(
 
 export async function getDiffStats(
   parentBranch: string,
-  currentBranch: string,
+  currentBranch: string
 ): Promise<string> {
   const result = await runGitCommand([
     "diff",
@@ -214,7 +189,7 @@ export async function getDiffStats(
 export async function showCommits(
   parentBranch: string,
   currentBranch: string,
-  options: GitLogOptions,
+  options: GitLogOptions
 ) {
   const args = ["--no-pager", "log"];
 
@@ -225,10 +200,7 @@ export async function showCommits(
   } else if (options.date) {
     args.push("--pretty=format:%h - %ad - %s", "--date=short");
   } else {
-    args.push(
-      "--pretty=format:%C(yellow)%h%C(reset) - %C(green)%ad%C(reset) - %s %C(blue)<%an>%C(reset)",
-      "--date=relative",
-    );
+    args.push("--pretty=format:%h - %ad - %s <%an>", "--date=relative");
   }
 
   if (options.stat) {
@@ -251,7 +223,7 @@ export async function showCommits(
 
   const result = await runGitCommand(args);
   if (result.success) {
-    console.log(result.output);
+    console.log(result.output.trim());
   }
 }
 
@@ -276,7 +248,7 @@ EXAMPLES:
     deno run --allow-run --allow-read git-branch-commits.ts
     deno run --allow-run --allow-read git-branch-commits.ts -p main
     deno run --allow-run --allow-read git-branch-commits.ts -o -g
-    deno run --allow-run --allow-read git-branch-commits.ts -s -n 10`,
+    deno run --allow-run --allow-read git-branch-commits.ts -s -n 10`
   );
 }
 
@@ -321,7 +293,7 @@ async function main() {
         Deno.exit(0);
         break;
       default:
-        printError(`Unknown option: ${args[i]}`);
+        console.error(`Unknown option: ${args[i]}`);
         showUsage();
         Deno.exit(1);
     }
@@ -330,33 +302,32 @@ async function main() {
   // Check if we're in a git repository
   const gitCheck = await runGitCommand(["rev-parse", "--git-dir"]);
   if (!gitCheck.success) {
-    printError("Error: Not in a git repository");
+    console.error("Error: Not in a git repository");
     Deno.exit(1);
   }
 
   // Get current branch
   const currentBranch = await getCurrentBranch();
   if (!currentBranch) {
-    printError("Error: Could not determine current branch");
+    console.error("Error: Could not determine current branch");
     Deno.exit(1);
   }
 
   if (currentBranch === "HEAD") {
-    printError("Error: You are in a detached HEAD state");
+    console.error("Error: You are in a detached HEAD state");
     Deno.exit(1);
   }
 
-  printInfo(`Current branch: ${currentBranch}`);
+  console.log(`- Current branch: ${currentBranch}`);
 
   // Find parent branch
-  printInfo("Finding parent branch...");
   const parentBranch = await findParentBranch(currentBranch);
   if (!parentBranch) {
-    printError("Error: Could not determine parent branch");
+    console.error("Error: Could not determine parent branch");
     Deno.exit(1);
   }
 
-  printInfo(`Parent branch: ${parentBranch}`);
+  console.log(`- Parent branch: ${parentBranch}`);
 
   // Check if parent branch exists
   const checkLocal = await runGitCommand([
@@ -373,7 +344,7 @@ async function main() {
   ]);
 
   if (!checkLocal.success && !checkRemote.success) {
-    printError(`Error: Parent branch '${parentBranch}' does not exist`);
+    console.error(`Error: Parent branch '${parentBranch}' does not exist`);
     Deno.exit(1);
   }
 
@@ -381,34 +352,33 @@ async function main() {
   const commitCount = await getCommitCount(parentBranch, currentBranch);
 
   if (commitCount === 0) {
-    printWarning(`No commits found that are unique to ${currentBranch}`);
-    printInfo(`Your branch is up to date with ${parentBranch}`);
+    console.warn(`- No commits found that are unique to ${currentBranch}`);
+    console.log(`- Your branch is up to date with ${parentBranch}`);
     Deno.exit(0);
   }
 
-  printSuccess(`\nFound ${commitCount} commits unique to ${currentBranch}:\n`);
+  console.log(`- Found ${commitCount} commits unique to ${currentBranch}:\n`);
 
   // Show the commits
   await showCommits(parentBranch, currentBranch, options);
 
   // Show summary
-  console.log("\n");
-  printInfo("Summary:");
-  printInfo(`- Total unique commits: ${commitCount}`);
+  console.log("\nSummary:");
+  console.log(`- Total unique commits: ${commitCount}`);
 
   const filesChanged = await getFilesChanged(parentBranch, currentBranch);
-  printInfo(`- Total files changed: ${filesChanged}`);
+  console.log(`- Total files changed: ${filesChanged}`);
 
   const stats = await getDiffStats(parentBranch, currentBranch);
   if (stats) {
-    printInfo(`- Changes: ${stats}`);
+    console.log(`- Changes: ${stats}`);
   }
 }
 
 // Run the main function
 if (import.meta.main) {
   main().catch((error) => {
-    printError(`Error: ${error.message}`);
+    console.error(`Error: ${error.message}`);
     Deno.exit(1);
   });
 }
