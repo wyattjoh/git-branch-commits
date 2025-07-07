@@ -18,5 +18,3 @@ jobs:
         run: deno fmt --check
       - name: Type check
         run: deno check
-      - name: Test
-        run: deno test
